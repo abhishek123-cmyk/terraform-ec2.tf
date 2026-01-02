@@ -18,12 +18,12 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ec2-creation-in-stockhome-region
+        working-directory: ec2-creation-in-stockholm-region
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: ec2-creation-in-stockhome-region
+        working-directory: ec2-creation-in-stockholm-region
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: ec2-creation-in-stockhome-region
+        working-directory: ec2-creation-in-stockholm-region
