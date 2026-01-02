@@ -1,9 +1,13 @@
-# Specify the AWS provider and region
+# -------------------------
+# AWS Provider
+# -------------------------
 provider "aws" {
   region = "eu-north-1"
 }
 
-# Get the latest Ubuntu 20.04 AMI
+# -------------------------
+# Data Source: Latest Ubuntu 20.04 AMI
+# -------------------------
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Ubuntu official owner
@@ -13,7 +17,9 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Create a new VPC
+# -------------------------
+# Create VPC
+# -------------------------
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -24,11 +30,12 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Create a public subnet in the VPC
+# -------------------------
+# Create Subnet (AWS chooses AZ automatically)
+# -------------------------
 resource "aws_subnet" "main" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone       = "eu-north-1a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -36,7 +43,9 @@ resource "aws_subnet" "main" {
   }
 }
 
-# Create an Internet Gateway so the instance can access the internet
+# -------------------------
+# Internet Gateway
+# -------------------------
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -45,7 +54,9 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Create a route table for the subnet
+# -------------------------
+# Route Table
+# -------------------------
 resource "aws_route_table" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -59,32 +70,36 @@ resource "aws_route_table" "main" {
   }
 }
 
-# Associate the route table with the subnet
+# -------------------------
+# Associate Route Table with Subnet
+# -------------------------
 resource "aws_route_table_association" "main" {
   subnet_id      = aws_subnet.main.id
   route_table_id = aws_route_table.main.id
 }
 
-# Security Group to allow SSH
+# -------------------------
+# Security Group for SSH
+# -------------------------
 resource "aws_security_group" "ssh" {
   name        = "terraform-ssh"
   description = "Allow SSH inbound traffic"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description      = "SSH"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description      = "All outbound"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -92,10 +107,12 @@ resource "aws_security_group" "ssh" {
   }
 }
 
-# Launch the EC2 instance
+# -------------------------
+# EC2 Instance
+# -------------------------
 resource "aws_instance" "github_ec2" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t2.micro"
+  instance_type               = "t3.micro"   # supported in eu-north-1
   subnet_id                   = aws_subnet.main.id
   vpc_security_group_ids      = [aws_security_group.ssh.id]
   associate_public_ip_address = true
@@ -104,3 +121,4 @@ resource "aws_instance" "github_ec2" {
     Name = "terraform-github-ec2"
   }
 }
+
